@@ -1,5 +1,4 @@
 <?php include 'includes/header.php'; ?>
-<link rel="stylesheet" href="../assets/css/landing.css">
 
 <main class="landing-page">
     <section class="premium-hero">
