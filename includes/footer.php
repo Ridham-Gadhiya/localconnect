@@ -1,11 +1,11 @@
-</div> <footer class="bg-dark text-white pt-5 pb-4 mt-5 position-relative overflow-hidden">
+</div> <footer class="bg-dark text-white pt-5 pb-4 mt-auto position-relative overflow-hidden">
     <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" 
          style="background: radial-gradient(circle at 10% 20%, rgb(37, 99, 235) 0%, transparent 40%);"></div>
 
     <div class="container position-relative z-index-2">
         <div class="row g-5">
             <div class="col-lg-4 col-md-12">
-                <a class="navbar-brand fw-bold d-flex align-items-center mb-4 text-white" href="../index.php">
+                <a class="navbar-brand fw-bold d-flex align-items-center mb-4 text-white" href="<?= $base_url ?>/index.php">
                     <div class="bg-primary rounded-3 p-2 me-2 d-flex align-items-center justify-content-center shadow-lg" style="width: 38px; height: 38px;">
                         <i class="fas fa-plug-circle-check fs-5 text-white"></i>
                     </div>
@@ -25,29 +25,29 @@
             <div class="col-lg-2 col-md-4 col-6">
                 <h6 class="fw-bold text-white mb-4 text-uppercase small ls-2">Services</h6>
                 <ul class="list-unstyled footer-nav">
-                    <li><a href="search_services.php">Find Plumbers</a></li>
-                    <li><a href="search_services.php">Electricians</a></li>
-                    <li><a href="search_services.php">Home Cleaning</a></li>
-                    <li><a href="search_services.php">Mechanics</a></li>
+                    <li><a href="<?= $base_url ?>/user/search_services.php">Find Plumbers</a></li>
+                    <li><a href="<?= $base_url ?>/user/search_services.php">Electricians</a></li>
+                    <li><a href="<?= $base_url ?>/user/search_services.php">Home Cleaning</a></li>
+                    <li><a href="<?= $base_url ?>/user/search_services.php">Carpentry</a></li>
                 </ul>
             </div>
 
             <div class="col-lg-2 col-md-4 col-6">
                 <h6 class="fw-bold text-white mb-4 text-uppercase small ls-2">Platform</h6>
                 <ul class="list-unstyled footer-nav">
-                    <li><a href="user/my_bookings.php">My Account</a></li>
-                    <li><a href="auth/register_provider.php">Become a Pro</a></li>
-                    <li><a href="#">Security Guide</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="<?= $base_url ?>/user/my_bookings.php">My Account</a></li>
+                    <li><a href="<?= $base_url ?>/auth/register_provider.php">Become a Pro</a></li>
+                    <li><a href="<?= $base_url ?>/auth/login.php">Portal Sign In</a></li>
+                    <li><a href="<?= $base_url ?>/index.php">Home</a></li>
                 </ul>
             </div>
 
             <div class="col-lg-4 col-md-4">
                 <h6 class="fw-bold text-white mb-4 text-uppercase small ls-2">Stay Updated</h6>
                 <p class="text-secondary small mb-4">Subscribe to get the latest service updates and local offers.</p>
-                <form class="input-group mb-4 custom-newsletter">
-                    <input type="email" class="form-control bg-secondary bg-opacity-10 border-0 text-white" placeholder="Email Address" aria-label="Email">
-                    <button class="btn btn-primary" type="button"><i class="fas fa-paper-plane"></i></button>
+                <form class="input-group mb-4 custom-newsletter" onsubmit="event.preventDefault(); alert('Thank you for subscribing to LocalConnect updates!');">
+                    <input type="email" class="form-control bg-secondary bg-opacity-10 border-0 text-white" placeholder="Email Address" aria-label="Email" required>
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i></button>
                 </form>
                 <div class="contact-pill d-flex align-items-center bg-white bg-opacity-5 rounded-pill p-2">
                     <div class="icon-sm bg-primary rounded-circle me-3"><i class="fas fa-headset text-white"></i></div>
@@ -79,7 +79,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/js/main.js"></script>
 
 </body>
 </html>

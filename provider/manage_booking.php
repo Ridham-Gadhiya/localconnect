@@ -17,8 +17,20 @@ if (isset($_GET['accept'])) {
         SET bookings.status = 'accepted'
         WHERE bookings.id = ? AND services.provider_id = ? AND bookings.status = 'pending'
     ");
-    $stmt->execute([$_GET['accept'], $provider_id]);
+    $stmt->execute([intval($_GET['accept']), $provider_id]);
     header("Location: manage_booking.php?success=1");
+    exit;
+}
+
+if (isset($_GET['reject'])) {
+    $stmt = $conn->prepare("
+        UPDATE bookings
+        JOIN services ON bookings.service_id = services.id
+        SET bookings.status = 'rejected'
+        WHERE bookings.id = ? AND services.provider_id = ? AND bookings.status = 'pending'
+    ");
+    $stmt->execute([intval($_GET['reject']), $provider_id]);
+    header("Location: manage_booking.php?success=3");
     exit;
 }
 
@@ -29,7 +41,7 @@ if (isset($_GET['complete'])) {
         SET bookings.status = 'completed'
         WHERE bookings.id = ? AND services.provider_id = ? AND bookings.status = 'accepted'
     ");
-    $stmt->execute([$_GET['complete'], $provider_id]);
+    $stmt->execute([intval($_GET['complete']), $provider_id]);
     header("Location: manage_booking.php?success=2");
     exit;
 }
@@ -57,7 +69,7 @@ $bookings = $stmt->fetchAll();
         </a>
         <div>
             <h2 class="fw-bold mb-1">Manage Bookings</h2>
-            <p class="text-muted mb-0 small">Review requests, contact customers, and close completed jobs.</p>
+            <p class="text-muted mb-0 small">Review incoming requests, contact customers, and fulfill scheduled jobs.</p>
         </div>
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
@@ -68,13 +80,15 @@ $bookings = $stmt->fetchAll();
 </div>
 
 <?php if (isset($_GET['success'])): ?>
-    <div class="alert alert-success border-0 shadow-sm rounded-4">
+    <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">
         <?php if ($_GET['success'] === '1'): ?>
-            Booking accepted successfully.
+            <i class="fas fa-check-circle me-2"></i>Booking request accepted successfully!
         <?php elseif ($_GET['success'] === '2'): ?>
-            Booking marked as completed.
+            <i class="fas fa-check-double me-2"></i>Job marked as completed. Earnings added to your revenue.
+        <?php elseif ($_GET['success'] === '3'): ?>
+            <i class="fas fa-times-circle me-2"></i>Booking request was declined.
         <?php else: ?>
-            Booking updated successfully.
+            <i class="fas fa-info-circle me-2"></i>Booking status updated successfully.
         <?php endif; ?>
     </div>
 <?php endif; ?>
@@ -85,7 +99,7 @@ $bookings = $stmt->fetchAll();
             <i class="fas fa-inbox text-muted opacity-30"></i>
         </div>
         <h4 class="fw-bold">No Requests Yet</h4>
-        <p class="text-muted mx-auto mb-0" style="max-width: 400px;">When customers book your services, they will appear here for your review.</p>
+        <p class="text-muted mx-auto mb-0" style="max-width: 400px;">When customers book your services, their scheduled appointments will appear here.</p>
     </div>
 <?php else: ?>
 
@@ -97,11 +111,12 @@ $bookings = $stmt->fetchAll();
         if ($b['status'] === 'accepted') {
             $statusClass = 'status-accepted';
             $iconClass = 'fa-check-circle';
-        }
-
-        if ($b['status'] === 'completed') {
+        } elseif ($b['status'] === 'completed') {
             $statusClass = 'status-completed';
             $iconClass = 'fa-check-double';
+        } elseif ($b['status'] === 'rejected' || $b['status'] === 'cancelled') {
+            $statusClass = 'status-rejected';
+            $iconClass = 'fa-times-circle';
         }
     ?>
     <div class="col-lg-6 col-xl-4">
@@ -135,15 +150,20 @@ $bookings = $stmt->fetchAll();
                 <div class="mt-4 pt-3 border-top">
                     <?php if ($b['status'] === 'pending'): ?>
                         <div class="row g-2">
-                            <div class="col-12">
+                            <div class="col-8">
                                 <a href="?accept=<?= $b['id'] ?>" class="btn btn-success btn-pill w-100 fw-bold py-2 shadow-sm">
-                                    <i class="fas fa-check me-2"></i>Accept Request
+                                    <i class="fas fa-check me-1"></i>Accept
+                                </a>
+                            </div>
+                            <div class="col-4">
+                                <a href="?reject=<?= $b['id'] ?>" class="btn btn-outline-danger btn-pill w-100 fw-bold py-2" onclick="return confirm('Decline this booking request?');">
+                                    <i class="fas fa-ban me-1"></i>Decline
                                 </a>
                             </div>
                             <?php if (!empty($b['user_phone'])): ?>
-                                <div class="col-12">
-                                    <a href="tel:<?= htmlspecialchars($b['user_phone']) ?>" class="btn btn-outline-dark btn-pill w-100 py-2 shadow-sm">
-                                        <i class="fas fa-phone-alt me-2"></i>Call Customer
+                                <div class="col-12 mt-2">
+                                    <a href="tel:<?= htmlspecialchars($b['user_phone']) ?>" class="btn btn-outline-dark btn-pill w-100 py-2 shadow-sm small">
+                                        <i class="fas fa-phone-alt me-2"></i>Call Customer (<?= htmlspecialchars($b['user_phone']) ?>)
                                     </a>
                                 </div>
                             <?php endif; ?>
@@ -152,12 +172,12 @@ $bookings = $stmt->fetchAll();
                         <div class="row g-2">
                             <div class="col-8">
                                 <a href="?complete=<?= $b['id'] ?>" class="btn btn-primary btn-pill w-100 fw-bold py-2 shadow-sm">
-                                    Mark Completed
+                                    <i class="fas fa-check-double me-1"></i>Mark Completed
                                 </a>
                             </div>
                             <div class="col-4">
                                 <?php if (!empty($b['user_phone'])): ?>
-                                    <a href="tel:<?= htmlspecialchars($b['user_phone']) ?>" class="btn btn-outline-dark btn-pill w-100 py-2 shadow-sm">
+                                    <a href="tel:<?= htmlspecialchars($b['user_phone']) ?>" class="btn btn-outline-dark btn-pill w-100 py-2 shadow-sm" title="Call Customer">
                                         <i class="fas fa-phone-alt"></i>
                                     </a>
                                 <?php else: ?>
@@ -167,9 +187,13 @@ $bookings = $stmt->fetchAll();
                                 <?php endif; ?>
                             </div>
                         </div>
+                    <?php elseif ($b['status'] === 'completed'): ?>
+                        <button class="btn btn-light btn-pill w-100 fw-bold py-2 disabled opacity-75 text-success">
+                            <i class="fas fa-check-circle me-1"></i>Service Completed
+                        </button>
                     <?php else: ?>
-                        <button class="btn btn-light btn-pill w-100 fw-bold py-2 disabled opacity-50">
-                            Service Completed
+                        <button class="btn btn-light btn-pill w-100 fw-bold py-2 disabled opacity-50 text-muted">
+                            <i class="fas fa-times-circle me-1"></i>Request Closed
                         </button>
                     <?php endif; ?>
                 </div>

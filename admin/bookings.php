@@ -63,7 +63,7 @@ $bookings = $stmt->fetchAll();
                     $icon = 'fa-clock';
                     if ($b['status'] === 'accepted') { $statusClass = 'status-accepted'; $icon = 'fa-check-circle'; }
                     if ($b['status'] === 'completed') { $statusClass = 'status-completed'; $icon = 'fa-star'; }
-                    if ($b['status'] === 'rejected') { $statusClass = 'status-rejected'; $icon = 'fa-times-circle'; }
+                    if ($b['status'] === 'rejected' || $b['status'] === 'cancelled') { $statusClass = 'status-rejected'; $icon = 'fa-times-circle'; }
                 ?>
                 <tr class="animate-fade-in">
                     <td class="ps-4">

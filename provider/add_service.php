@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     );
     $stmt->execute([$provider_id, $category_id, $service_name, $description, $price]);
 
-    header("Location: manage_services.php");
+    header("Location: manage_services.php?msg=added");
     exit;
 }
 ?>

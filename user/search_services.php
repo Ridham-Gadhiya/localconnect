@@ -3,7 +3,7 @@ include '../includes/header.php';
 include '../includes/auth_check.php';
 require '../config/db.php';
 
-// Check if user is logged in
+// Check if user is logged in as customer
 if ($_SESSION['role'] !== 'user') {
     header("Location: ../auth/login.php");
     exit;
@@ -11,32 +11,35 @@ if ($_SESSION['role'] !== 'user') {
 
 // 1. GET FILTER PARAMETERS
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$category_id = isset($_GET['category_id']) ? $_GET['category_id'] : '';
+$category_id = isset($_GET['category_id']) ? trim($_GET['category_id']) : '';
 
 // 2. FETCH CATEGORIES FOR DROPDOWN
 $cat_stmt = $conn->prepare("SELECT * FROM categories ORDER BY category_name ASC");
 $cat_stmt->execute();
 $all_categories = $cat_stmt->fetchAll();
 
-// 3. BUILD DYNAMIC SQL QUERY
+// 3. BUILD DYNAMIC SQL QUERY (Only show services from approved providers)
 $sql = "SELECT services.*, 
                categories.category_name, 
                service_providers.name AS provider_name
         FROM services
         JOIN categories ON services.category_id = categories.id
         JOIN service_providers ON services.provider_id = service_providers.id
-        WHERE 1=1"; // Placeholder to allow easy appending of AND clauses
+        WHERE service_providers.status = 'approved'";
 
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND services.service_name LIKE ?";
-    $params[] = "%$search%";
+    $sql .= " AND (services.service_name LIKE ? OR categories.category_name LIKE ? OR service_providers.name LIKE ?)";
+    $searchPattern = "%$search%";
+    $params[] = $searchPattern;
+    $params[] = $searchPattern;
+    $params[] = $searchPattern;
 }
 
 if (!empty($category_id) && $category_id !== 'All Categories') {
     $sql .= " AND services.category_id = ?";
-    $params[] = $category_id;
+    $params[] = intval($category_id);
 }
 
 $sql .= " ORDER BY services.created_at DESC";
@@ -64,7 +67,7 @@ $services = $stmt->fetchAll();
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
                 <input type="text" name="search" class="form-control border-start-0 ps-0 shadow-none" 
-                       placeholder="Search by service name..." value="<?= htmlspecialchars($search) ?>">
+                       placeholder="Search by service name, provider..." value="<?= htmlspecialchars($search) ?>">
             </div>
         </div>
         <div class="col-md-4">
@@ -91,7 +94,7 @@ $services = $stmt->fetchAll();
         <p class="text-muted">Showing results for: 
             <strong><?= !empty($search) ? htmlspecialchars($search) : 'All Services' ?></strong> 
             in <strong><?= !empty($category_id) ? 'Selected Category' : 'All Categories' ?></strong>
-            <a href="search_services.php" class="ms-2 small text-danger text-decoration-none">Clear Filters</a>
+            <a href="search_services.php" class="ms-2 small text-danger text-decoration-none fw-bold">Clear Filters</a>
         </p>
     </div>
 <?php endif; ?>
@@ -104,7 +107,7 @@ $services = $stmt->fetchAll();
         </div>
         <h4 class="fw-bold">No services found</h4>
         <p class="text-muted">Try adjusting your keywords or category filters.</p>
-        <a href="search_services.php" class="btn btn-outline-primary btn-pill px-4">View All Services</a>
+        <a href="search_services.php" class="btn btn-outline-primary btn-pill px-4 mx-auto" style="width: max-content;">View All Services</a>
     </div>
 <?php endif; ?>
 
@@ -114,11 +117,11 @@ $services = $stmt->fetchAll();
             <div class="card-body p-4 d-flex flex-column">
                 
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                    <span class="badge bg-primary-soft text-primary rounded-pill px-3 py-2 small">
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 small">
                         <?= htmlspecialchars($service['category_name']) ?>
                     </span>
-                    <div class="text-warning small">
-                        <i class="fas fa-star"></i> 4.8
+                    <div class="text-warning small fw-bold">
+                        <i class="fas fa-star"></i> 4.9
                     </div>
                 </div>
 
@@ -127,16 +130,16 @@ $services = $stmt->fetchAll();
                 </h5>
 
                 <p class="small text-muted mb-3">
-                    <i class="fas fa-user-circle me-1"></i> <?= htmlspecialchars($service['provider_name']) ?>
+                    <i class="fas fa-user-circle me-1 text-primary"></i> <?= htmlspecialchars($service['provider_name']) ?>
                 </p>
 
-                <p class="card-text text-muted small mb-4">
-                    <?= htmlspecialchars($service['description']) ?>
+                <p class="card-text text-muted small mb-4 flex-grow-1">
+                    <?= htmlspecialchars(substr($service['description'], 0, 140)) ?><?= strlen($service['description']) > 140 ? '...' : '' ?>
                 </p>
 
                 <div class="mt-auto pt-3 border-top">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted small fw-semibold">Service Price</span>
+                        <span class="text-muted small fw-semibold">Standard Rate</span>
                         <span class="fs-4 fw-bold text-dark">₹<?= htmlspecialchars($service['price']) ?></span>
                     </div>
 

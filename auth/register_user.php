@@ -1,61 +1,91 @@
 <?php
 require '../config/db.php';
 
+$error = "";
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $phone = $_POST['phone'];
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    $phone = trim($_POST['phone']);
 
-    $stmt = $conn->prepare(
-        "INSERT INTO users (name,email,password,phone) VALUES (?,?,?,?)"
-    );
-    $stmt->execute([$name,$email,$password,$phone]);
+    if (empty($name) || empty($email) || empty($password)) {
+        $error = "Please fill in all required fields.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Please enter a valid email address.";
+    } else {
+        // Check if email already registered across users, providers, or admin
+        $check = $conn->prepare("SELECT id FROM users WHERE email = ? UNION SELECT id FROM service_providers WHERE email = ? UNION SELECT id FROM admin WHERE email = ?");
+        $check->execute([$email, $email, $email]);
+        
+        if ($check->fetch()) {
+            $error = "This email address is already registered. Please sign in or use another email.";
+        } else {
+            try {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $conn->prepare(
+                    "INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)"
+                );
+                $stmt->execute([$name, $email, $hash, $phone]);
 
-    header("Location: login.php");
+                header("Location: login.php?msg=registered_user");
+                exit;
+            } catch (PDOException $e) {
+                $error = "An unexpected error occurred during registration. Please try again.";
+            }
+        }
+    }
 }
 ?>
 
 <?php include '../includes/header.php'; ?>
 
 <div class="row justify-content-center align-items-center" style="min-height: 75vh;">
-  <div class="col-md-6">
-    <div class="card form-card border-0">
-      <div class="card-body p-5">
+  <div class="col-md-6 col-lg-5">
+    <div class="card form-card border-0 shadow-sm rounded-4">
+      <div class="card-body p-4 p-md-5">
         <div class="text-center mb-4">
-            <h3 class="fw-bold mb-1">Create User Account</h3>
-            <p class="text-muted">Join LocalConnect to find trusted service providers</p>
+            <div class="icon-circle bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 60px; height: 60px; font-size: 24px;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Create Customer Account</h3>
+            <p class="text-muted small">Join LocalConnect to find trusted service providers</p>
         </div>
 
+        <?php if(!empty($error)): ?>
+          <div class="alert alert-danger border-0 small rounded-3 mb-4 d-flex align-items-center">
+            <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+            <div><?= htmlspecialchars($error) ?></div>
+          </div>
+        <?php endif; ?>
+
         <form method="POST">
-          <div class="row">
-              <div class="col-md-12 mb-3">
-                <label class="form-label fw-semibold small">Full Name</label>
-                <input name="name" class="form-control form-control-lg shadow-sm" placeholder="John Doe" required>
-              </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+            <input name="name" class="form-control form-control-lg shadow-none" placeholder="e.g. John Doe" required value="<?= isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '' ?>">
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-semibold small">Email Address</label>
-            <input type="email" name="email" class="form-control form-control-lg shadow-sm" placeholder="john@example.com" required>
+            <label class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+            <input type="email" name="email" class="form-control form-control-lg shadow-none" placeholder="name@example.com" required value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>">
           </div>
 
-          <div class="row">
+          <div class="row g-2">
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold small">Password</label>
-                <input type="password" name="password" class="form-control form-control-lg shadow-sm" placeholder="••••••••" required>
+                <label class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+                <input type="password" name="password" class="form-control form-control-lg shadow-none" placeholder="••••••••" required>
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label fw-semibold small">Phone Number</label>
-                <input name="phone" class="form-control form-control-lg shadow-sm" placeholder="+1 (555) 000-0000">
+                <input name="phone" class="form-control form-control-lg shadow-none" placeholder="+91 98765 43210" value="<?= isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : '' ?>">
               </div>
           </div>
 
-          <button class="btn btn-success btn-lg w-100 fw-bold mt-3 shadow border-0">Create Account</button>
+          <button class="btn btn-success btn-lg w-100 fw-bold mt-2 shadow-sm border-0 btn-pill">Create Account</button>
         </form>
 
         <div class="text-center mt-4">
-          <p class="small text-muted">Already have an account? <a href="login.php" class="text-primary fw-bold text-decoration-none">Log in here</a></p>
+          <p class="small text-muted mb-0">Already have an account? <a href="login.php" class="text-primary fw-bold text-decoration-none">Log in here</a></p>
         </div>
 
       </div>

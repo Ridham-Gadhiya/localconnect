@@ -3,16 +3,18 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+$base_url = "/localconnect";
+
 // Logic to determine the correct dashboard path based on role
-$dashboard_path = "../index.php"; // Default fallback
+$dashboard_path = $base_url . "/index.php"; // Default fallback
 if (isset($_SESSION['role'])) {
     $role = $_SESSION['role'];
     if ($role === 'admin') {
-        $dashboard_path = "admin/dashboard.php";
+        $dashboard_path = $base_url . "/admin/dashboard.php";
     } elseif ($role === 'provider') {
-        $dashboard_path = "provider/dashboard.php";
+        $dashboard_path = $base_url . "/provider/dashboard.php";
     } elseif ($role === 'user') {
-        $dashboard_path = "user/dashboard.php";
+        $dashboard_path = $base_url . "/user/dashboard.php";
     }
 }
 ?>
@@ -21,23 +23,22 @@ if (isset($_SESSION['role'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LocalConnect | Premium Service Marketplace</title>
+    <title>LocalConnect | Premium Local Service Marketplace</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <!-- <link rel="stylesheet" href="../assets/css/landing.css"> -->
+    <link rel="stylesheet" href="<?= $base_url ?>/assets/css/style.css">
+    <?php if (isset($is_landing_page) && $is_landing_page): ?>
+    <link rel="stylesheet" href="<?= $base_url ?>/assets/css/landing.css">
+    <?php endif; ?>
 </head>
 
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm py-3">
   <div class="container">
-    <a class="navbar-brand fw-bold d-flex align-items-center" href="/localconnect/index.php">
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= $base_url ?>/index.php">
         <div class="bg-primary rounded-3 p-2 me-2 d-flex align-items-center justify-content-center shadow" style="width: 35px; height: 35px;">
             <i class="fas fa-plug-circle-check fs-6 text-white"></i>
         </div>
@@ -52,15 +53,15 @@ if (isset($_SESSION['role'])) {
       <ul class="navbar-nav ms-auto align-items-center gap-3">
         
         <li class="nav-item">
-            <a class="nav-link fw-medium small text-uppercase ls-1" href="/localconnect/index.php">Home</a>
+            <a class="nav-link fw-medium small text-uppercase ls-1" href="<?= $base_url ?>/index.php">Home</a>
         </li>
 
         <?php if(!isset($_SESSION['role'])): ?>
             <li class="nav-item">
-                <a class="nav-link fw-medium px-3 small text-uppercase ls-1" href="/localconnect/auth/login.php">Login</a>
+                <a class="nav-link fw-medium px-3 small text-uppercase ls-1" href="<?= $base_url ?>/auth/login.php">Login</a>
             </li>
             <li class="nav-item">
-                <a class="btn btn-primary btn-pill px-4 fw-bold shadow-sm animate-pulse-slow" href="../auth/register_user.php">
+                <a class="btn btn-primary btn-pill px-4 fw-bold shadow-sm animate-pulse-slow" href="<?= $base_url ?>/auth/register_user.php">
                     Get Started
                 </a>
             </li>
@@ -85,7 +86,7 @@ if (isset($_SESSION['role'])) {
                     </li>
                     <?php if($_SESSION['role'] === 'user'): ?>
                         <li>
-                            <a class="dropdown-item py-2 d-flex align-items-center" href="../user/my_bookings.php">
+                            <a class="dropdown-item py-2 d-flex align-items-center" href="<?= $base_url ?>/user/my_bookings.php">
                                 <i class="fas fa-calendar-alt me-3 text-primary opacity-75"></i> 
                                 <span>My Bookings</span>
                             </a>
@@ -93,7 +94,7 @@ if (isset($_SESSION['role'])) {
                     <?php endif; ?>
                     <li><hr class="dropdown-divider opacity-50"></li>
                     <li>
-                        <a class="dropdown-item py-2 text-danger d-flex align-items-center" href="/localconnect/auth/logout.php">
+                        <a class="dropdown-item py-2 text-danger d-flex align-items-center" href="<?= $base_url ?>/auth/logout.php">
                             <i class="fas fa-sign-out-alt me-3"></i> 
                             <span class="fw-bold">Logout</span>
                         </a>
@@ -106,4 +107,8 @@ if (isset($_SESSION['role'])) {
   </div>
 </nav>
 
-<div class="container my-5 pb-5">
+<?php if (empty($is_landing_page)): ?>
+<div class="container my-5 pb-5 flex-grow-1">
+<?php else: ?>
+<div class="flex-grow-1">
+<?php endif; ?>

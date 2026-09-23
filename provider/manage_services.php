@@ -13,7 +13,7 @@ $provider_id = $_SESSION['provider_id'];
 // Handle Deletion
 if (isset($_GET['delete'])) {
     $stmt = $conn->prepare("DELETE FROM services WHERE id = ? AND provider_id = ?");
-    $stmt->execute([$_GET['delete'], $provider_id]);
+    $stmt->execute([intval($_GET['delete']), $provider_id]);
     header("Location: manage_services.php?msg=deleted");
     exit;
 }
@@ -37,7 +37,7 @@ $services = $stmt->fetchAll();
         </a>
         <div>
             <h2 class="fw-bold mb-1">Manage Services</h2>
-            <p class="text-muted mb-0 small">View and manage all services you offer on the platform</p>
+            <p class="text-muted mb-0 small">View, edit, and manage all services you offer on the platform</p>
         </div>
     </div>
     <div class="col-md-4 text-md-end mt-3 mt-md-0">
@@ -46,6 +46,16 @@ $services = $stmt->fetchAll();
         </a>
     </div>
 </div>
+
+<?php if (isset($_GET['msg'])): ?>
+    <?php if ($_GET['msg'] === 'deleted'): ?>
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">Service listing deleted successfully.</div>
+    <?php elseif ($_GET['msg'] === 'updated'): ?>
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">Service listing updated successfully!</div>
+    <?php elseif ($_GET['msg'] === 'added'): ?>
+        <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">New service published successfully!</div>
+    <?php endif; ?>
+<?php endif; ?>
 
 <?php if (count($services) === 0): ?>
     <div class="card border-0 shadow-sm text-center p-5 rounded-4 mt-4 animate-fade-in">
@@ -74,7 +84,7 @@ $services = $stmt->fetchAll();
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h5 class="fw-bold mb-1 text-dark"><?= htmlspecialchars($s['service_name']) ?></h5>
-                                <p class="text-muted small mb-0"><?= htmlspecialchars(substr($s['description'], 0, 100)) ?>...</p>
+                                <p class="text-muted small mb-0"><?= htmlspecialchars(substr($s['description'], 0, 120)) ?><?= strlen($s['description']) > 120 ? '...' : '' ?></p>
                             </div>
                             <div class="text-end ps-3">
                                 <p class="x-small text-muted mb-0 fw-bold ls-1 text-uppercase">Standard Rate</p>
@@ -83,16 +93,16 @@ $services = $stmt->fetchAll();
                         </div>
                     </div>
 
-                    <div class="col-md-auto p-4 bg-light border-start text-center" style="min-width: 150px;">
+                    <div class="col-md-auto p-4 bg-light border-start text-center" style="min-width: 170px;">
                         <div class="d-flex d-md-block gap-2 justify-content-center">
+                            <a href="edit_service.php?id=<?= $s['id'] ?>" class="btn btn-outline-primary btn-sm w-100 rounded-pill mb-md-2 fw-semibold">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </a>
                             <a href="?delete=<?= $s['id'] ?>" 
-                               class="btn btn-outline-danger btn-sm w-100 rounded-pill mb-md-2"
-                               onclick="return confirm('Delete this service permanently?');">
+                               class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-semibold"
+                               onclick="return confirm('Are you sure you want to delete this service permanently?');">
                                 <i class="fas fa-trash-alt me-1"></i> Delete
                             </a>
-                            <button class="btn btn-light btn-sm w-100 rounded-pill border" disabled title="Editing coming soon">
-                                <i class="fas fa-edit me-1"></i> Edit
-                            </button>
                         </div>
                     </div>
                 </div>
